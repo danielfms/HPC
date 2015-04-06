@@ -5,7 +5,7 @@
 #define BLOCK_SIZE 32
 
 __global__ void reduce(int *g_idata, int *g_odata) {
-	extern __shared__ int sdata[];
+	__shared__ int sdata[BLOCK_SIZE];
 	// each thread loads one element from global to shared mem
 	unsigned int tid = threadIdx.x;
 	unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
@@ -46,7 +46,7 @@ void imprimir(int *A,int N){
 
 
 int main(){
-  int N=4194304;
+  int N=64;
 	int s;
   int bytes=(N)*sizeof(int);
 	int *A=(int*)malloc(bytes);
@@ -88,19 +88,27 @@ int main(){
 	clock_t start2 = clock();  
 	reduce<<<dimGrid,dimBlock>>>(d_A,d_R);
 	cudaDeviceSynchronize();
+	cudaMemcpy(R, d_R, bytes, cudaMemcpyDeviceToHost);
+  int *d_R2=(int*)malloc(bytes);
+  int *R2=(int*)malloc(bytes);
+  reduce<<<dimGrid,dimBlock>>>(R,d_R2);
+  cudaDeviceSynchronize();
+  cudaMemcpy(R2, d_R2, bytes, cudaMemcpyDeviceToHost);
   // Copy array back to host
-  cudaMemcpy(R,d_R, bytes, cudaMemcpyDeviceToHost );
+ 
   clock_t end2= clock(); 
 	double elapsed_seconds2=end2-start2;
   printf("Tiempo transcurrido Paralelo Reduccion: %lf\n", (elapsed_seconds2 / CLOCKS_PER_SEC));  
 	
   /////////////////////////////////////////////////////////////
   
-	if(s!=R[0])
+	if(s==R[0])
+    printf("Las sumatorias son iguales: %d %d \n",s,R[0]);
+  else
 		printf("Las sumatorias no son iguales: %d %d \n",s,R[0]);
 	
-  //for(int i=0;i<N;i++)
-    //printf("%d ",R[i]);
+  for(int i=0;i<N;i++)
+    printf("%d ",R[i]);
   
   free(A);
   free(R);
