@@ -46,7 +46,7 @@ void imprimir(int *A,int N){
 
 
 int main(){
-  int N=64;
+  int N=1024;
 	int s;
   int bytes=(N)*sizeof(int);
 	int *A=(int*)malloc(bytes);
@@ -88,13 +88,19 @@ int main(){
 	clock_t start2 = clock();  
 	reduce<<<dimGrid,dimBlock>>>(d_A,d_R);
 	cudaDeviceSynchronize();
-	cudaMemcpy(R, d_R, bytes, cudaMemcpyDeviceToHost);
-  int *d_R2=(int*)malloc(bytes);
-  int *R2=(int*)malloc(bytes);
-  reduce<<<dimGrid,dimBlock>>>(R,d_R2);
-  cudaDeviceSynchronize();
-  cudaMemcpy(R2, d_R2, bytes, cudaMemcpyDeviceToHost);
+  cudaMemcpy(R, d_R, bytes, cudaMemcpyDeviceToHost);
+  for(int i=1;i<=ceil(N/blocksize);i++){
+    reduce<<<dimGrid,dimBlock>>>(d_R,d_A);
+  	cudaDeviceSynchronize();
+  	cudaMemcpy(R, d_A, bytes, cudaMemcpyDeviceToHost);
+    
+  }
+	
+
+  
   // Copy array back to host
+  
+  
  
   clock_t end2= clock(); 
 	double elapsed_seconds2=end2-start2;
