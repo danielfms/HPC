@@ -2,44 +2,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BLOCK_SIZE 512 
-#define NUM_OF_ELEMS 4096 
+#define BLOCK_SIZE 32
 
-__global__ void sumP(int *A,int *r){
-	__shared__ int partialSum[NUM_OF_ELEMS];
-	int t = threadIdx.x;
-	//int i = blockIdx.x*blockDim.x + threadIdx.x;
-  
-	//if(t<NUM_OF_ELEMS)
-	partialSum[t] = A[t];//i
-  __syncthreads();
-	
-	for (unsigned int stride = blockDim.x; stride > 1; stride /= 2){
-		if (t < stride)
-			partialSum[t] += partialSum[t+stride];
-		__syncthreads();
+__global__ void reduce0(int *g_idata, int *g_odata) {
+	extern __shared__ int sdata[];
+	// each thread loads one element from global to shared mem
+	unsigned int tid = threadIdx.x;
+	unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+	sdata[tid] = g_idata[i];
+	__syncthreads();
+	// do reduction in shared mem
+	for(unsigned int s=1; s < blockDim.x; s *= 2) {
+		if (tid % (2*s) == 0) {
+		sdata[tid] += sdata[tid + s];
+		}
+	__syncthreads();
 	}
-   __syncthreads();
-  if (t == 0)
-		r[0]=partialSum[t];
+	// write result for this block to global mem
+	if (tid == 0) g_odata[blockIdx.x] = sdata[0];
 }
 
 
-void sumS(int *A, int *r){
+void sumS(int *A,int N ,int *r){
   int value=0;
-	for(int i=0;i<NUM_OF_ELEMS;i++)
+	for(int i=0;i<N;i++)
 			value+=A[i];
   *r=value;
   
 }
 
-void llenar(int *A){
-	for(int  i = 0; i <NUM_OF_ELEMS; i++ )
-        A[i] = 1;
+void llenar(int *A,int N,int a){
+	for(int  i = 0; i <N; i++ )
+        A[i] = a;
 }
 
-void imprimir(int *A){
-	for(int i = 0; i <NUM_OF_ELEMS; i++)
+void imprimir(int *A,int N){
+	for(int i = 0; i <N; i++)
         printf("%d ",A[i]);
   
 	printf("\n");
@@ -48,48 +46,56 @@ void imprimir(int *A){
 
 
 int main(){
-  int n=16;
-	size_t bytes=(NUM_OF_ELEMS)*sizeof(int);
+  int N=20;
+	size_t bytes=(N)*sizeof(int);
 	int *A=(int*)malloc(bytes);
   int *R=(int*)malloc(bytes);
 	int s;
 	
-	llenar(A);
-  //imprimir(A);
+  //Lleno las matrices.
+	llenar(A,N,1);
+	llenar(R,N,0);
+ 
+  
+  //////////////////Algoritmo secuencial///////////////////////
 	clock_t start = clock();      
-  sumS(A,&s);
+  sumS(A,N,&s);
   clock_t end= clock(); 
 	double elapsed_seconds=end-start;
   printf("Tiempo transcurrido Secuencial: %lf\n", (elapsed_seconds / CLOCKS_PER_SEC));
+  /////////////////////////////////////////////////////////////
   
+  
+  ////////////////////////Algoritmo Paralelo///////////////////
+  
+  //////Separo memoria para el algoritmo paralelo
 	int *d_A;
   int *d_R;
   cudaMalloc(&d_A,bytes);
   cudaMalloc(&d_R,bytes);
 
-	cudaMemcpy(d_A, A, bytes, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_A, A, bytes, cudaMemcpyHostToDevice);
   cudaMemcpy(d_R, R, bytes, cudaMemcpyHostToDevice);
-
-	//Number of threads in each thread block
-		//bloques
+  
   float blocksize=BLOCK_SIZE;
-	dim3 dimGrid(ceil(NUM_OF_ELEMS/blocksize),1,1);
-  //hilos
+	dim3 dimGrid(ceil(N/blocksize),1,1);
   dim3 dimBlock(blocksize,1,1);
 	
 	clock_t start2 = clock();  
-	sumP<<<dimGrid,dimBlock>>>(d_A,d_R);
-
+	reduce0<<<dimGrid,dimBlock>>>(d_A,d_R);
+	cudaDeviceSynchronize();
   // Copy array back to host
   cudaMemcpy(R,d_R, bytes, cudaMemcpyDeviceToHost );
   clock_t end2= clock(); 
 	double elapsed_seconds2=end2-start2;
   printf("Tiempo transcurrido Paralelo Reduccion: %lf\n", (elapsed_seconds2 / CLOCKS_PER_SEC));  
 	
+  /////////////////////////////////////////////////////////////
+  
 	if(s!=R[0])
 		printf("Las sumatorias no son iguales: %d %d \n",s,R[0]);
 	
-  for(int i=0;i<NUM_OF_ELEMS;i++)
+  for(int i=0;i<N;i++)
    printf("%d ",R[i]);
    
 	return 0;
