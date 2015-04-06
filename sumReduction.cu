@@ -39,11 +39,6 @@ void llenar(int *A,int N,int a){
         A[i] = a;
 }
 
-void llenar2(int *A,int N,int a){
-	for(int  i = a; i <N; i++ )
-        A[i] = 0;
-}
-
 void imprimir(int *A,int N){
 	for(int i = 0; i <N; i++)
         printf("%d ",A[i]);
