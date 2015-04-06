@@ -24,10 +24,10 @@ __global__ void reduce0(int *g_idata, int *g_odata) {
 
 
 void sumS(int *A,int N ,int *r){
-  int value=0;
+	int value=0;
 	for(int i=0;i<N;i++)
-			value+=A[i];
-  *r=value;
+		value+=A[i];
+	*r=value;
   
 }
 
@@ -46,57 +46,57 @@ void imprimir(int *A,int N){
 
 
 int main(){
-  int N=20;
+	int N=20;
 	size_t bytes=(N)*sizeof(int);
 	int *A=(int*)malloc(bytes);
-  int *R=(int*)malloc(bytes);
+    int *R=(int*)malloc(bytes);
 	int s;
 	
-  //Lleno las matrices.
+    //Lleno las matrices.
 	llenar(A,N,1);
 	llenar(R,N,0);
  
   
-  //////////////////Algoritmo secuencial///////////////////////
+    //////////////////Algoritmo secuencial///////////////////////
 	clock_t start = clock();      
-  sumS(A,N,&s);
-  clock_t end= clock(); 
+    sumS(A,N,&s);
+    clock_t end= clock(); 
 	double elapsed_seconds=end-start;
-  printf("Tiempo transcurrido Secuencial: %lf\n", (elapsed_seconds / CLOCKS_PER_SEC));
-  /////////////////////////////////////////////////////////////
+    printf("Tiempo transcurrido Secuencial: %lf\n", (elapsed_seconds / CLOCKS_PER_SEC));
+    /////////////////////////////////////////////////////////////
   
   
-  ////////////////////////Algoritmo Paralelo///////////////////
+    ////////////////////////Algoritmo Paralelo///////////////////
   
-  //////Separo memoria para el algoritmo paralelo
+    //////Separo memoria para el algoritmo paralelo
 	int *d_A;
-  int *d_R;
-  cudaMalloc(&d_A,bytes);
-  cudaMalloc(&d_R,bytes);
+    int *d_R;
+    cudaMalloc(&d_A,bytes);
+    cudaMalloc(&d_R,bytes);
 
-  cudaMemcpy(d_A, A, bytes, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_R, R, bytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A, A, bytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_R, R, bytes, cudaMemcpyHostToDevice);
   
-  float blocksize=BLOCK_SIZE;
+    float blocksize=BLOCK_SIZE;
 	dim3 dimGrid(ceil(N/blocksize),1,1);
-  dim3 dimBlock(blocksize,1,1);
+    dim3 dimBlock(blocksize,1,1);
 	
 	clock_t start2 = clock();  
 	reduce0<<<dimGrid,dimBlock>>>(d_A,d_R);
 	cudaDeviceSynchronize();
-  // Copy array back to host
-  cudaMemcpy(R,d_R, bytes, cudaMemcpyDeviceToHost );
-  clock_t end2= clock(); 
+    // Copy array back to host
+    cudaMemcpy(R,d_R, bytes, cudaMemcpyDeviceToHost );
+    clock_t end2= clock(); 
 	double elapsed_seconds2=end2-start2;
-  printf("Tiempo transcurrido Paralelo Reduccion: %lf\n", (elapsed_seconds2 / CLOCKS_PER_SEC));  
+    printf("Tiempo transcurrido Paralelo Reduccion: %lf\n", (elapsed_seconds2 / CLOCKS_PER_SEC));  
 	
-  /////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////
   
 	if(s!=R[0])
 		printf("Las sumatorias no son iguales: %d %d \n",s,R[0]);
 	
-  for(int i=0;i<N;i++)
-   printf("%d ",R[i]);
+    for(int i=0;i<N;i++)
+   		printf("%d ",R[i]);
    
 	return 0;
 }
