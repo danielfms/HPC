@@ -46,7 +46,7 @@ void imprimir(int *A,int N){
 
 
 int main(){
-  int N=1024;
+  int N=1024; //2*10240;
 	int s;
   int bytes=(N)*sizeof(int);
 	int *A=(int*)malloc(bytes);
@@ -89,13 +89,17 @@ int main(){
 	reduce<<<dimGrid,dimBlock>>>(d_A,d_R);
 	cudaDeviceSynchronize();
   cudaMemcpy(R, d_R, bytes, cudaMemcpyDeviceToHost);
-  for(int i=1;i<=ceil(N/blocksize);i++){
+  
+  
+  /////////////////////Llamado multikernel///////////////////////
+  for(int i=1;i<N;i*=BLOCK_SIZE){
     reduce<<<dimGrid,dimBlock>>>(d_R,d_A);
   	cudaDeviceSynchronize();
-  	cudaMemcpy(R, d_A, bytes, cudaMemcpyDeviceToHost);
-    
+  	cudaMemcpy(d_R, d_A, bytes, cudaMemcpyDeviceToHost);  
   }
-	
+  ////////////////////Llamado multikernel///////////////////////
+	cudaMemcpy(R, d_A, bytes, cudaMemcpyDeviceToHost);
+
 
   
   // Copy array back to host
