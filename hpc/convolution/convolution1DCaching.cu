@@ -69,7 +69,6 @@ int main(){
   llenar(V,N,1);
   llenar(P,N,0);
   
-  
   //Convolucion secuencial
   clock_t start = clock();      
   convolutionBasic(V,Mask,P,5,N);
