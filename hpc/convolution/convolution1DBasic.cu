@@ -114,5 +114,7 @@ int main(){
   compare(P,P_out,N);
   cout<<"Aceleracion obtenida: "<<elapsed_seconds/elapsed_seconds2<<endl;
   
+  ///HACER FREE
+  
   return 0; 
 }
