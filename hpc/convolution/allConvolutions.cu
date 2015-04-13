@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 1024
 #define MAX_MASK_WIDTH 5
-#define TILE_SIZE 32
+#define TILE_SIZE 1024
 __constant__ int M[MAX_MASK_WIDTH];
 
 using namespace std;
@@ -43,7 +43,8 @@ __global__ void KernelConvolutionBasic(int *N,int *M,int *P,int Mask_Width,int W
       Pvalue+=N[N_start_point+j]*M[j];
       }
     }
-    P[i]=Pvalue;
+  	if(i<Width)
+    	P[i]=Pvalue;
 }
 
 __global__ void KernelConvolutionCaching(int *N,int *P,int Mask_Width,int Width){
@@ -99,7 +100,7 @@ void compare(int*A,int *B1,int *B2,int *B3,int width){
 
 int main(){
   
-  int N=32;
+  int N=10600000;
   int bytes=(N)*sizeof(int);
   int bytesM=MAX_MASK_WIDTH *sizeof(int);
   int *V=(int*)malloc(bytes);
@@ -116,7 +117,7 @@ int main(){
   clock_t end= clock(); 
   double elapsed_seconds=end-start;
   printf("Tiempo transcurrido Secuencial: %lf\n", (elapsed_seconds / CLOCKS_PER_SEC));
-  imprimirVec(P,N);
+  //imprimirVec(P,N);
   /////////////////////////
   
   
@@ -152,7 +153,7 @@ int main(){
   end=clock();
   double elapsed_seconds1=end-start;
   printf("Tiempo transcurrido Paralelo Basic: %lf\n", (elapsed_seconds1 / CLOCKS_PER_SEC));
-  imprimirVec(P_out1,N);
+  //imprimirVec(P_out1,N);
   cout<<"Aceleracion obtenida: "<<elapsed_seconds/elapsed_seconds1<<endl<<endl;
 
   free(P_in1);
@@ -186,7 +187,7 @@ int main(){
   end=clock();
   double elapsed_seconds2=end-start;
   printf("Tiempo transcurrido Paralelo Caching: %lf\n", (elapsed_seconds2 / CLOCKS_PER_SEC));
-  imprimirVec(P_out2,N);
+  //imprimirVec(P_out2,N);
   cout<<"Aceleracion obtenida: "<<elapsed_seconds/elapsed_seconds2<<endl<<endl;
   free(P_in2);
   cudaFree(d_V2);
@@ -219,7 +220,7 @@ int main(){
   end=clock();
   double elapsed_seconds3=end-start;
   printf("Tiempo transcurrido Paralelo Tile: %lf\n", (elapsed_seconds3 / CLOCKS_PER_SEC));
-  imprimirVec(P_out3,N);
+  //imprimirVec(P_out3,N);
   cout<<"Aceleracion obtenida: "<<elapsed_seconds/elapsed_seconds3<<endl;
 
   free(P_in3);
