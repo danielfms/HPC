@@ -13,11 +13,15 @@ __global__ void KernelConvolutionTile(int *N, int *P, int Mask_Width,int Width) 
   int i = blockIdx.x*blockDim.x + threadIdx.x;
   __shared__ int N_ds[TILE_SIZE + MAX_MASK_WIDTH -1];
   int n = Mask_Width/2;
+  
   int halo_index_left = (blockIdx.x - 1)*blockDim.x + threadIdx.x;
   if (threadIdx.x >= blockDim.x - n) {
     N_ds[threadIdx.x - (blockDim.x - n)] =(halo_index_left < 0) ? 0 : N[halo_index_left];
   }
-  N_ds[n + threadIdx.x] = N[blockIdx.x*blockDim.x + threadIdx.x];
+  if(i<Width)
+  	N_ds[n + threadIdx.x] = N[i];
+  else
+    N_ds[n + threadIdx.x] = 0;
   int halo_index_right = (blockIdx.x + 1)*blockDim.x + threadIdx.x;
   if (threadIdx.x < n) {
     N_ds[n + blockDim.x + threadIdx.x] =(halo_index_right >= Width) ? 0 : N[halo_index_right];
@@ -95,7 +99,7 @@ void compare(int*A,int *B1,int *B2,int *B3,int width){
 
 int main(){
   
-  int N=50000000;
+  int N=32;
   int bytes=(N)*sizeof(int);
   int bytesM=MAX_MASK_WIDTH *sizeof(int);
   int *V=(int*)malloc(bytes);
@@ -112,7 +116,7 @@ int main(){
   clock_t end= clock(); 
   double elapsed_seconds=end-start;
   printf("Tiempo transcurrido Secuencial: %lf\n", (elapsed_seconds / CLOCKS_PER_SEC));
-  //imprimirVec(P,N);
+  imprimirVec(P,N);
   /////////////////////////
   
   
@@ -148,7 +152,7 @@ int main(){
   end=clock();
   double elapsed_seconds1=end-start;
   printf("Tiempo transcurrido Paralelo Basic: %lf\n", (elapsed_seconds1 / CLOCKS_PER_SEC));
-  //imprimirVec(P_out1,N);
+  imprimirVec(P_out1,N);
   cout<<"Aceleracion obtenida: "<<elapsed_seconds/elapsed_seconds1<<endl<<endl;
 
   free(P_in1);
@@ -182,7 +186,7 @@ int main(){
   end=clock();
   double elapsed_seconds2=end-start;
   printf("Tiempo transcurrido Paralelo Caching: %lf\n", (elapsed_seconds2 / CLOCKS_PER_SEC));
-  //imprimirVec(P_out2,N);
+  imprimirVec(P_out2,N);
   cout<<"Aceleracion obtenida: "<<elapsed_seconds/elapsed_seconds2<<endl<<endl;
   free(P_in2);
   cudaFree(d_V2);
@@ -215,7 +219,7 @@ int main(){
   end=clock();
   double elapsed_seconds3=end-start;
   printf("Tiempo transcurrido Paralelo Tile: %lf\n", (elapsed_seconds3 / CLOCKS_PER_SEC));
-  //imprimirVec(P_out3,N);
+  imprimirVec(P_out3,N);
   cout<<"Aceleracion obtenida: "<<elapsed_seconds/elapsed_seconds3<<endl;
 
   free(P_in3);
