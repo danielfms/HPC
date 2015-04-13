@@ -131,6 +131,7 @@ int main(){
   int *P_in1=(int*)malloc(bytes);
   llenar(P_in1,N,0);
   
+  start=clock();
   cudaMalloc(&d_V1,bytes);
   cudaMalloc(&d_P1,bytes);
   cudaMalloc(&d_Mask1,bytesM);
@@ -140,7 +141,7 @@ int main(){
   cudaMemcpy(d_Mask1, Mask, bytesM, cudaMemcpyHostToDevice);
   
 
-  start=clock();
+  
   KernelConvolutionBasic<<<dimGrid,dimBlock>>>(d_V1,d_Mask1,d_P1,MAX_MASK_WIDTH,N);
   cudaDeviceSynchronize();
   cudaMemcpy(P_out1,d_P1, bytes, cudaMemcpyDeviceToHost );
@@ -167,13 +168,14 @@ int main(){
 
   llenar(P_in2,N,0);
   
+  start=clock();
   cudaMalloc(&d_V2,bytes);
   cudaMalloc(&d_P2,bytes);
 
   cudaMemcpy(d_V2, V, bytes, cudaMemcpyHostToDevice);
   cudaMemcpy(d_P2, P_in2, bytes, cudaMemcpyHostToDevice);
 
-  start=clock();
+  
   KernelConvolutionCaching<<<dimGrid,dimBlock>>>(d_V2,d_P2,MAX_MASK_WIDTH,N);
   cudaDeviceSynchronize();
   cudaMemcpy(P_out2,d_P2, bytes, cudaMemcpyDeviceToHost );
@@ -198,6 +200,7 @@ int main(){
 
   llenar(P_in3,N,0);
   
+  start=clock();
   cudaMalloc(&d_V3,bytes);
   cudaMalloc(&d_P3,bytes);
 
@@ -205,7 +208,7 @@ int main(){
   cudaMemcpy(d_P3, P_in3, bytes, cudaMemcpyHostToDevice);
 
 
-  start=clock();
+  
   KernelConvolutionTile<<<dimGrid,dimBlock>>>(d_V3,d_P3,MAX_MASK_WIDTH,N);
   cudaDeviceSynchronize();
   cudaMemcpy(P_out3,d_P3, bytes, cudaMemcpyDeviceToHost );
