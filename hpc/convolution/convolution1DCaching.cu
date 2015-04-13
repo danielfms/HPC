@@ -21,8 +21,6 @@ __global__ void KernelConvolutionCaching(int *N,int *P,int Mask_Width,int Width)
 }
 
 void convolutionBasic(int *N,int *M,int *P,int Mask_Width,int Width){
-  
-  
   for(int i=0;i<Width;i++){
     int N_start_point = i - (Mask_Width/2);
     int Pvalue=0;
