@@ -17,7 +17,10 @@ __global__ void KernelConvolutionTile(int *N, int *P, int Mask_Width,int Width) 
   if (threadIdx.x >= blockDim.x - n) {
     N_ds[threadIdx.x - (blockDim.x - n)] =(halo_index_left < 0) ? 0 : N[halo_index_left];
   }
-  N_ds[n + threadIdx.x] = N[blockIdx.x*blockDim.x + threadIdx.x];
+  if(i<Width)
+  	N_ds[n + threadIdx.x] = N[i];
+  else
+    N_ds[n + threadIdx.x] = 0;
   int halo_index_right = (blockIdx.x + 1)*blockDim.x + threadIdx.x;
   if (threadIdx.x < n) {
     N_ds[n + blockDim.x + threadIdx.x] =(halo_index_right >= Width) ? 0 : N[halo_index_right];
