@@ -117,8 +117,14 @@ int main(){
   
   compare(P,P_out,N);
   cout<<"Aceleracion obtenida: "<<elapsed_seconds/elapsed_seconds2<<endl;
+
+  free(V);
+  free(P);
+  //free(Mask);
+  free(P_in);
+  free(P_out);
+  cudaFree(d_V);
+  cudaFree(d_P);
   
-  
-  //FALTA HACER FREE
   return 0; 
 }
