@@ -91,6 +91,7 @@ int main(){
 
   imwrite("./outputs/1089746672.png",gray_image);
 
+  cout<<gray_image.size().height<<gray_image.size().width<<endl;
 /*
   /// Generate grad_x and grad_y
   Mat grad_x, grad_y;
