@@ -15,10 +15,10 @@ __device__ unsigned char conv(int v){
   return v;
 }
 
-__global__ void KernelConvolutionBasic(unsigned char *Img_in,unsigned char *M,unsigned char *Img_out,int Mask_Width,int rowImg,int colImg){
+__global__ void KernelConvolutionBasic(unsigned char *Img_in, char *M,unsigned char *Img_out,int Mask_Width,int rowImg,int colImg){
   
   int row = blockIdx.x*blockDim.x + threadIdx.x;
-  int col = blockIdx.y*blockDim.y + threadIdx.y;
+  int col= blockIdx.y*blockDim.y + threadIdx.y;
 
   int N_start_point_i = row - (Mask_Width/2);
   int N_start_point_j = col - (Mask_Width/2);
@@ -33,8 +33,8 @@ __global__ void KernelConvolutionBasic(unsigned char *Img_in,unsigned char *M,un
 
       }
   }
-  // Es probable que vaya un if(row*rowImg+col<rowImg*colImg)
-  Img_out[row*rowImg+col]=conv(Pvalue);
+ if(row*rowImg+col<rowImg*colImg)
+  	Img_out[row*rowImg+col]=conv(Pvalue);
 }
 
 
@@ -71,7 +71,8 @@ int main(){
 
   char M[9] = {-1,0,1,-2,0,2,-1,0,1};
   int sizeM= sizeof(unsigned char)*9;
-  unsigned char *d_M=(unsigned char*)malloc(sizeM);
+  char *d_M=(char*)malloc(sizeM);
+  cudaMalloc((void**)&d_M,sizeM);
   cudaMemcpy(d_M,M,sizeM,cudaMemcpyHostToDevice);
 
   float blocksize=32;
