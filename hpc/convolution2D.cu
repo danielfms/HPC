@@ -6,7 +6,14 @@
 using namespace std;
 using namespace cv;
 
-
+__device__ unsigned char conv(int v){
+  if(v>255)
+    return 255;
+  else if(v<0)
+    return 0;
+    
+  return v;
+}
 
 __global__ void KernelConvolutionBasic(unsigned char *Img_in,unsigned char *M,unsigned char *Img_out,int Mask_Width,int rowImg,int colImg){
   
@@ -27,7 +34,7 @@ __global__ void KernelConvolutionBasic(unsigned char *Img_in,unsigned char *M,un
       }
   }
   // Es probable que vaya un if(row*rowImg+col<rowImg*colImg)
-  Img_out[row*rowImg+col]=Pvalue;
+  Img_out[row*rowImg+col]=conv(Pvalue);
 }
 
 
