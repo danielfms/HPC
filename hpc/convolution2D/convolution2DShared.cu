@@ -33,32 +33,27 @@ __global__ void KernelConvolutionBasic(unsigned char *Img_in, char *M,unsigned c
   
  
   
- for(int k = 0; k < (colImg+TILE_WIDTH-1)/(TILE_WIDTH); k++){
-  if(k*TILE_WIDTH + tx < colImg && row < rowImg){
-    imgT[ty][tx] = Img_in[row*colImg + k*TILE_WIDTH + tx];
-    //Img_out[row*colImg + k*TILE_WIDTH + tx]=imgT[ty][tx];
-  }else{
-   //imgT[ty][tx] = 0;
-  }
-  __syncthreads();
+  for(int k = 0; k < (colImg)/(TILE_WIDTH); k++){
+    if(k*TILE_WIDTH + tx < colImg && row < rowImg){
+      imgT[ty][tx] = Img_in[row*colImg + k*TILE_WIDTH + tx];
+    }
+    __syncthreads();
    
-  int N_start_point_i = ty - (Mask_Width/2);
-  int N_start_point_j = tx - (Mask_Width/2);
-
-  int Pvalue=0;
-  for (int ii= 0;ii<Mask_Width;ii++) {
-    Pvalue=0;
-    for (int jj= 0;jj<Mask_Width;jj++) {
-      if ((N_start_point_i+ii >= 0 && N_start_point_i + ii < TILE_WIDTH)&& (N_start_point_j+jj >= 0 && N_start_point_j + jj < TILE_WIDTH)) {
-        Pvalue+=imgT[N_start_point_i + ii][N_start_point_j+jj]*M[ii*Mask_Width+jj];
+    int N_start_point_i = ty - (Mask_Width/2);
+    int N_start_point_j = tx - (Mask_Width/2);
+    int Pvalue=0;
+    for (int ii= 0;ii<Mask_Width;ii++) {
+      Pvalue=0;
+      for (int jj= 0;jj<Mask_Width;jj++) {
+        if ((N_start_point_i+ii >= 0 && N_start_point_i + ii < TILE_WIDTH)&& (N_start_point_j+jj >= 0 && N_start_point_j + jj < TILE_WIDTH)) {
+          Pvalue+=imgT[N_start_point_i + ii][N_start_point_j+jj]*M[ii*Mask_Width+jj];
+        }
       }
     }
-  }
-  //__syncthreads();
-   // if(row*rowImg+col<rowImg*colImg)
-   Img_out[row*colImg + k*TILE_WIDTH + tx]=conv(Pvalue);
-  }
-  
+
+    __syncthreads();
+    Img_out[row*colImg + k*TILE_WIDTH + tx]=conv(Pvalue);
+  }  
 }
 
 
