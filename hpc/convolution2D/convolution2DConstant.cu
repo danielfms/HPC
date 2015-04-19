@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #define MASK_WIDTH 9
-__constant__ int M[MASK_WIDTH];
+__constant__ char M[MASK_WIDTH];
 
 using namespace std;
 using namespace cv;
