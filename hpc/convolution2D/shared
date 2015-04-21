@@ -32,28 +32,28 @@ __global__ void KernelConvolutionBasic(unsigned char *Img_in, char *M,unsigned c
   int row = by * TILE_WIDTH + ty;
   int col = bx * TILE_WIDTH + tx;
   
- 
+  unsigned int r = by*blockDim.y+ty;
+  unsigned int c = bx*blockDim.x+tx;
   
-  //for(int k = 0; k < (colImg)/(TILE_WIDTH); k++){
-   // if(k*TILE_WIDTH + tx < colImg && row < rowImg){
-      imgT[ty][tx] = Img_in[row*colImg + col];
-  //  }
-    __syncthreads();
+  
+   imgT[ty][tx] = Img_in[r*rowImg + c];
+
+   __syncthreads();
    
     int N_start_point_i = tx- (Mask_Width/2);
     int N_start_point_j = ty - (Mask_Width/2);
     int Pvalue=0;
-    for (int ii= 0;ii<Mask_Width;ii++) {
-      for (int jj= 0;jj<Mask_Width;jj++) {
+    for (int jj= 0;jj<Mask_Width;jj++) {
+      for (int ii= 0;ii<Mask_Width;ii++) {
         if ((N_start_point_i+ii >= 0 && N_start_point_i + ii < TILE_WIDTH)&& (N_start_point_j+jj >= 0 && N_start_point_j + jj < TILE_WIDTH)) {
           Pvalue+=imgT[N_start_point_j+jj][N_start_point_i + ii]*M[ii*Mask_Width+jj];
         }
       }
       
     }
-		 __syncthreads();
-    Img_out[row*colImg + col]=conv(Pvalue);
-  //}  
+ __syncthreads();
+ Img_out[r*rowImg + c]=conv(Pvalue);
+
 }
 
 
@@ -69,7 +69,7 @@ int main(){
 
   Mat image;
   //Leer imagen en escala de grises
-  image = imread("inputs/img1.jpg",0);
+  image = imread("inputs/img6.jpg",0);
   Size s = image.size();
   int row=s.width;
   int col=s.height;
