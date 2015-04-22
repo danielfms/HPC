@@ -21,23 +21,22 @@ __device__ unsigned char conv(int v){
 
 __global__ void KernelConvolutionBasic(unsigned char *Img_in,unsigned char *Img_out,int Mask_Width,int rowImg,int colImg){
   
-  int row = blockIdx.x*blockDim.x + threadIdx.x;
-  int col= blockIdx.y*blockDim.y + threadIdx.y;
+  unsigned int row = blockIdx.y*blockDim.y+threadIdx.y;
+  unsigned int col = blockIdx.x*blockDim.x+threadIdx.x;
 
   int N_start_point_i = row - (Mask_Width/2);
   int N_start_point_j = col - (Mask_Width/2);
 
     int Pvalue=0;
     for (int ii= 0;ii<Mask_Width;ii++) {
-      Pvalue=0;
       for (int jj= 0;jj<Mask_Width;jj++) {
-        if ((N_start_point_i+ii >= 0 && N_start_point_i + ii < rowImg)&& (N_start_point_j+jj >= 0 && N_start_point_j + jj < colImg)) {
+        if ((N_start_point_i+ii >= 0 && N_start_point_i + ii < colImg)&& (N_start_point_j+jj >= 0 && N_start_point_j + jj < rowImg)) {
           Pvalue+=Img_in[(N_start_point_i+ii)*rowImg+(N_start_point_j+jj)]*M[ii*Mask_Width+jj];
         }
 
       }
   }
- if(row*rowImg+col<rowImg*colImg)
+ //if(row*rowImg+col<rowImg*colImg)
     Img_out[row*rowImg+col]=conv(Pvalue);
 }
 
@@ -62,7 +61,7 @@ int main(){
   //imwrite("./outputs/1089746672.png",image);
   
   //Separo memoria para las imagenes en el host
-  int sizeM= sizeof(unsigned char)*9;
+  int sizeM= sizeof(char)*9;
   int size = sizeof(unsigned char)*row*col;
   unsigned char *img=(unsigned char*)malloc(size);
   unsigned char *img_out=(unsigned char*)malloc(size);
@@ -96,8 +95,8 @@ int main(){
   dim3 dimGrid(ceil(row/blocksize),ceil(col/blocksize),1);
 
    //Separo memoria en el device
-  unsigned char *d_img=(unsigned char*)malloc(size);
-  unsigned char *d_img_out=(unsigned char*)malloc(size);  
+  unsigned char *d_img;
+  unsigned char *d_img_out;  
   cudaMalloc((void**)&d_img,size);
   cudaMalloc((void**)&d_img_out,size);
 
@@ -117,7 +116,7 @@ int main(){
 
   //Creo la imagen
   Mat gray_image;
-  gray_image.create(row,col,CV_8UC1);
+  gray_image.create(col,row,CV_8UC1);
   gray_image.data = img_out;
   imwrite("./outputs/1089746672.png",gray_image);
   /////////////////////////////////////////////////////////////////////////////
