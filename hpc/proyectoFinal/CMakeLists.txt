@@ -1,0 +1,13 @@
+cmake_minimum_required (VERSION 2.8)
+project (proyectoFinal)
+find_package(CUDA REQUIRED)
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -std=c++11")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set (CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -arch=sm_30)
+CUDA_ADD_EXECUTABLE(fd_1d node.cu)
+CUDA_ADD_EXECUTABLE(FD_omp node_openMp.cu)
